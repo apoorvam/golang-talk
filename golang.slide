@@ -1,0 +1,189 @@
+Golang
+01:00 2 Aug 2016
+Tags: golang
+
+Apoorva M
+Developer,
+ThoughtWorks
+@ItsApoorvaHere
+
+* Plan
+
+- What's Golang?
+- Why do people choose Go?
+- What makes Go fast?
+- Goroutine vs Threads
+- Closing thoughts
+
+* Go Programming Langauge
+
+- Open source project by Google
+- Its an expressive, fast, statically typed language
+- Known for its Concurrency mechanisms
+: Concurrency mechanisms make it easy to write programs that get the most out of multicore and networked machines
+- Compiled language
+: Compiles quickly to machine code
+: - projects build as native binaries, this means no runtime dependencies like JVM
+- Has Garbage Collection
+: Golang in Gauge
+
+* Examples
+: Things I like
+:  - ADR
+:  - Present tool
+
+* Simple Static Webserver
+
+.play webserver.go
+
+* Anonymous functions - Closures
+Go supports anonymous functions, which can form closures.
+
+.play closures.go
+: The returned function closes over the variable i to form a closure.
+
+* Goroutines
+A goroutine is a lightweight thread of execution.
+
+.play goroutines.go
+
+* Communicate between goroutines
+Channels
+
+.play channels.go /START OMIT/,/END OMIT/
+[[https://divan.github.io/demos/pingpong/][Visualization]]
+
+* Why do people use Go?
+
+* Few common reasons are
+
+- Concurrency
+: attractive for ppl from single threaded or heavy weight threading model
+- Ease of deployment
+: simplicity
+- Performance
+: Lets Gauge the performance of Go.  -  Go is fast
+
+* What makes Go fast?
+Source:
+.link http://dave.cheney.net/2014/06/07/five-things-that-make-go-fast Five things that make go fast
+
+* Values
+
+ var foo int32 = 1234 // consumes 4 bytes of memory
+ var bar int = 2016   // consumes 8 bytes of memory
+
+ ~ python
+ >>> from sys import getsizeof
+ >>> foo = 1234
+ >>> getsizeof(foo)
+ 24
+
+ Integer foo = new Integer(1234); // Java: consumes 16 or 24 bytes
+
+- Go lets you create compact data structures, avoiding unnecessary redirection
+- Compact data structures utilize cache better
+- Better cache utilization leads to better performance
+: Go has a efficient way of storing values
+
+* Inlining
+
+- Function calls are not free. Optimization technique to reduce overhead is Inlining
+: Function call
+: - A new stack frame is created, and the details of the caller recorded.
+: - Any registers which may be overwritten during the function call are saved to the stack.
+: Inlining isn’t exclusive to Go.
+- Dead code elimination
+
+.play deadCode.go
+
+ func Expensive() {
+     if false {
+         // unreachable code
+     }
+ }
+
+* Escape Analysis
+
+: Go has mandatory Garbage Collection which means it tries to freed memory on heap, which comes at a cost
+: Because escape analysis is performed at compile time, not run time, stack allocation will always be faster than heap allocation, no matter how efficient your garbage collector is.
+
+- Escape analysis determines whether any references to a value escape the function in which the value is declared.
+- If no references escape, the value may be safely stored on the stack.
+- Values stored on the stack do not need to be allocated or freed.
+
+ func print() {
+    numbers := []int{1,2,3,4,5} // numbers never escape print()
+    for _, num := range numbers {
+        fmt.Println(num)
+    }
+ }
+
+* Goroutines
+
+How's it different from Threads?
+
+- Memory Consumption
+- Setup and teardown
+- Switching time
+: Lightweight threads
+: cheaper than OS threads
+
+* Process address space
+.image images/pas1.png
+* Guard page
+.image images/pas2.png
+* Thread stacks and Guard pages
+.image images/pas3.png 500 1000
+
+* Memory Consumption
+- Threads start out at 1MB, along with Guard page
+- The creation of a goroutine does not require much memory - only 2KB of stack space
+: They grow by allocating and freeing heap storage as required
+
+* Setup and Teardown costs
+- Threads have significant setup and teardown costs because it has to request resources from the OS and return it once its done.
+- Goroutines are created and destroyed by the runtime
+
+* Switching costs
+- During a thread switch, the scheduler needs to save all registers
+- Goroutines are cooperatively scheduled, rather than relying on the kernel to manage their time sharing.
+: The switch between goroutines only happens at well defined points, when an explicit call is made to the Go runtime scheduler.
+
+* How goroutines are executed?
+- Go runtime is allocated a few threads on which all the goroutines are multiplexed.
+- At any point of time, each thread will be executing one goroutine.
+- If that goroutine is blocked, then it will be swapped out for another goroutine that will execute on that thread instead.
+
+* When does switch between goroutines happen?
+- Channel send and receive operations
+- Blocking syscalls like file and network operations.
+- Go statement
+- Garbage collection
+
+* Example
+.image images/goscheduling.png 400 800
+
+This results in relatively few operating system threads per Go process, with the Go runtime taking care of assigning a runnable Goroutine to a free operating system thread.
+
+: In simple terms, goroutines are a lightweight abstraction over threads. A Go programmer does not deal with threads, and similarly the : OS is not aware of the existence of goroutines.
+
+* Goroutine stacks
+
+- No guard pages
+- Check for available stack space is done as part of the function call
+- Initial stack size is small
+- Grows as needed
+
+* Closing thoughts
+
+- I think Golang is a great langauge for building cross platform utilities.
+- Values, Inlining, Escape Analysis, Goroutines, copying stacks etc are a few things which make Go fast.
+- These features are powerful individually, they do not exist in isolation.
+: For example, the way the runtime multiplexes goroutines onto threads would not be nearly as efficient without growable stacks.
+- As with other languages, it is important to prevent simultaneous access of shared resources by more than one goroutine.
+
+_Do_not_communicate_by_sharing_memory;_instead,_share_memory_by_communicating._
+
+
+: Learn Golang? Blog references?
